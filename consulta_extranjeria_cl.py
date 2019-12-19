@@ -4,13 +4,13 @@ import threading
 import time
 import sys
 
-def checkStatus():
+def check_status():
 	with open('config.json') as json_data_file:
 		data = json.load(json_data_file)
 
-	timeInSeconds = timeInMinutes * 60
+	time_in_seconds = time_in_minutes * 60
 
-	threading.Timer(timeInSeconds, checkStatus).start()
+	threading.Timer(time_in_seconds, check_status).start()
 
 	names = name1 + ' ' + name2
 	surname1 = surn1
@@ -23,12 +23,8 @@ def checkStatus():
 
 	r = requests.get(url, params = payload)
 
-	#print(r.text)
-	#print('####')
-
 	web = r.text
 	
-	#print(web)
 	index = web.find('SeleccionPersona(')
 	index2 = web.find(')">') + 1
 	web = web[index:index2]
@@ -49,14 +45,7 @@ def checkStatus():
 		nodes.append(web[:web.find('\'')])
 		counter = counter + 1
 
-	#print(nodes)
-	
-	print("a ver si hay cookies")
-	print(r.cookies)
-	print("fin de a ver si hay cookies")
-
-	cookieVal = r.cookies['JSESSIONID']
-	#print(cookieVal)
+	cookie_val = r.cookies['JSESSIONID']
 
 	payload2 = {"cod_ext":nodes[0],
 				"fec_ext":nodes[1],
@@ -66,10 +55,7 @@ def checkStatus():
 				"cod_auto":nodes[5],
 				"tipo":nodes[6],
 				"origen":"Express"}
-	url2 = data["urls"]["url_action_2"] + cookieVal
-
-	#print(url2)
-	#print('####')
+	url2 = data["urls"]["url_action_2"] + cookie_val
 
 	r2 = requests.Session()
 	r2.headers.update({'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'})
@@ -78,34 +64,27 @@ def checkStatus():
 	r2.headers.update({'Cache-Control':'max-age=0'})
 	r2.headers.update({'Content-Length':'123'})
 	r2.headers.update({'Content-Type':'application/x-www-form-urlencoded'})
-	r2.headers.update({'Cookie':'JSESSIONID='+cookieVal})
+	r2.headers.update({'Cookie':'JSESSIONID='+cookie_val})
 	r2.headers.update({'Proxy-Connection':'keep-alive'})
 	r2.headers.update({'Upgrade-Insecure-Requests':'1'})
 	r2.headers.update({'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'})
 
 	r2 = requests.post(url2, data = payload2)
 
-	#print(r2.headers)
-	#print(r2.text)
-
 	web = r2.text
 
 	# we try to find the table that matters
-	beginTag = '<table width="920"'
-	endTag = '</table>'
+	begin_tag = '<table width="920"'
+	end_tag = '</table>'
 
 	# then we trim the string, so we end with just that table
-	web = trimBetweenTags(web, beginTag, endTag)
+	web = trim_between_tags(web, begin_tag, end_tag)
 	
 	# next we go for the tbody and again trim the string
-	beginTag = '<tbody>'
-	endTag = '</tbody>'
+	begin_tag = '<tbody>'
+	end_tag = '</tbody>'
 
-	web = trimBetweenTags(web, beginTag, endTag)
-
-	#print(web)
-
-	#print(nodes[6])
+	web = trim_between_tags(web, begin_tag, end_tag)
 
 	if (nodes[6] == 'PEDE'):
 		if (web.find('Permanencia Definitiva otorgada') != -1):
@@ -124,23 +103,22 @@ def checkStatus():
 
 	print('')
 	print('Tiempo para próxima consulta:')
-	countdown(timeInSeconds)
+	countdown(time_in_seconds)
 
 def countdown(t):
 	while t:
 		mins, secs = divmod(t, 60)
-		timeformat = '{:02d}:{:02d}'.format(mins,secs)
-		print(timeformat, end='\r')
+		time_format = '{:02d}:{:02d}'.format(mins,secs)
+		print(time_format, end='\r')
 		time.sleep(1)
 		t -= 1
 
-''' Self explanatory I think '''
-def trimBetweenTags(givenString, beginTag, endTag):
-	givenString = givenString[givenString.find(beginTag):]
-	givenString = givenString[:givenString.find(endTag)+len(endTag)]
-	return givenString
+def trim_between_tags(str, begin_tag, end_tag):
+	str = str[str.find(begin_tag):]
+	str = str[:str.find(end_tag)+len(end_tag)]
+	return str
 
-timeInMinutes = 30 #en minutos, es llevado a segundos
+time_in_minutes = 30
 
 if __name__ == "__main__" and len(sys.argv) >=4:
 	name1 = sys.argv[1]
@@ -153,4 +131,4 @@ elif __name__ == "__main__":
 	surn1 = input("Ingresa primer apellido: ")
 	surn2 = input("Ingresa segundo apellido: ")
 
-checkStatus()
+check_status()
