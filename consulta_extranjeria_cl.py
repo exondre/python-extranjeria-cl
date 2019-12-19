@@ -8,17 +8,13 @@ def check_status():
 	with open('config.json') as json_data_file:
 		data = json.load(json_data_file)
 
-	time_in_seconds = time_in_minutes * 60
+	tiempo_segundos = tiempo_minutos * 60
 
-	threading.Timer(time_in_seconds, check_status).start()
+	threading.Timer(tiempo_segundos, check_status).start()
 
-	names = name1 + ' ' + name2
-	surname1 = surn1
-	surname2 = surn2
-
-	payload = {	"names":names,
-				"surname1":surname1,
-				"surname2":surname2}
+	payload = {	"names":nombres,
+				"surname1":apellido_paterno,
+				"surname2":apellido_materno}
 	url = data["urls"]["url_action_1"]
 
 	r = requests.get(url, params = payload)
@@ -45,7 +41,11 @@ def check_status():
 		nodes.append(web[:web.find('\'')])
 		counter = counter + 1
 
-	cookie_val = r.cookies['JSESSIONID']
+	try:
+		cookie_val = r.cookies['JSESSIONID']
+	except:
+		print("Ocurrio un error al intentar obtener tu informacion. Intente mas tarde.")
+		exit()
 
 	payload2 = {"cod_ext":nodes[0],
 				"fec_ext":nodes[1],
@@ -64,7 +64,6 @@ def check_status():
 	r2.headers.update({'Cache-Control':'max-age=0'})
 	r2.headers.update({'Content-Length':'123'})
 	r2.headers.update({'Content-Type':'application/x-www-form-urlencoded'})
-	r2.headers.update({'Cookie':'JSESSIONID='+cookie_val})
 	r2.headers.update({'Proxy-Connection':'keep-alive'})
 	r2.headers.update({'Upgrade-Insecure-Requests':'1'})
 	r2.headers.update({'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'})
@@ -72,6 +71,7 @@ def check_status():
 	r2 = requests.post(url2, data = payload2)
 
 	web = r2.text
+	web_before = r2.text
 
 	# we try to find the table that matters
 	begin_tag = '<table width="920"'
@@ -96,14 +96,20 @@ def check_status():
 	elif (nodes[6] == 'VISA'):
 		if (web.find('Visa de residencia aprobada') != -1):
 			print('Visa de residencia aprobada')
+		elif (web.find('Visa Estampada') != -1):
+			print('	Visa Estampada')
+		elif (web.find('Solicitud Aprobada con observaciones') != -1):
+			print('	Solicitud Aprobada con observaciones')
 		elif (web.find('Solicitud ingresada a an&aacute;lisis con') != -1):
 			print('	Solicitud ingresada a análisis con requerimientos previos')
 		elif (web.find('Solictud ingresada a an&aacute;lisis sin') != -1):
 			print('Solicitud ingresada a análisis sin ningún requerimiento adicional')
+	else:
+		print(web_before)
 
 	print('')
 	print('Tiempo para próxima consulta:')
-	countdown(time_in_seconds)
+	countdown(tiempo_segundos)
 
 def countdown(t):
 	while t:
@@ -118,17 +124,20 @@ def trim_between_tags(str, begin_tag, end_tag):
 	str = str[:str.find(end_tag)+len(end_tag)]
 	return str
 
-time_in_minutes = 30
+tiempo_minutos = 30
 
-if __name__ == "__main__" and len(sys.argv) >=4:
-	name1 = sys.argv[1]
-	name2 = sys.argv[2]
-	surn1 = sys.argv[3]
-	surn2 = sys.argv[4]
+if __name__ == "__main__" and len(sys.argv) >=5:
+	nombres = sys.argv[1] + " " + sys.argv[2]
+	apellido_paterno = sys.argv[3]
+	apellido_materno = sys.argv[4]
+
+	if len(sys.argv) >= 6:
+		time_in_minutes = int(sys.argv[5])
 elif __name__ == "__main__":
 	name1 = input("Ingresa primer nombre: ")
 	name2 = input("Ingresa segundo nombre: ")
-	surn1 = input("Ingresa primer apellido: ")
-	surn2 = input("Ingresa segundo apellido: ")
+	nombres = name1 + " " + name2
+	apellido_paterno = input("Ingresa primer apellido: ")
+	apellido_materno = input("Ingresa segundo apellido: ")
 
 check_status()
